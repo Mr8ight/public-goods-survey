@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Goods and Punishment Survey</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .question label {
+            font-size: 18px;
+        }
+        .question input[type="range"], .question input[type="number"], .question select {
+            width: 100%;
+        }
+        .question input[type="radio"] {
+            margin-right: 10px;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .formula {
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Public Goods and Punishment Survey</h1>
+
+        <!-- Round Instructions -->
+        <div id="roundInstructions" class="question">
+            <p>Round <span id="roundNumber">1</span> Instructions:</p>
+            <p>You are assigned the number <span id="participantNumber">1</span>.</p>
+            <p>Your budget is $20. Please decide how much to contribute to the public good.</p>
+        </div>
+
+        <!-- Contribution Question -->
+        <div id="contributionQuestion" class="question">
+            <label for="contribution">How much would you like to contribute to the public good?</label>
+            <input type="range" id="contribution" name="contribution" min="0" max="20" value="0" step="1">
+            <p>Contribution: $<span id="contributionValue">0</span></p>
+        </div>
+
+        <!-- Proceed Button -->
+        <button id="submitContribution" class="button" onclick="submitContribution()">Next</button>
+
+        <!-- Neighbor Contributions and Punishment -->
+        <div id="punishmentSection" class="question" style="display:none;">
+            <p>Your neighbors have contributed the following amounts:</p>
+            <p>Neighbor n-1: $<span id="neighbor1Contribution">5</span></p>
+            <p>Neighbor n+1: $<span id="neighbor2Contribution">8</span></p>
+            
+            <label for="punish">Would you like to punish a neighbor?</label>
+            <input type="radio" id="punishYes" name="punish" value="yes"> Yes
+            <input type="radio" id="punishNo" name="punish" value="no" checked> No
+
+            <div id="punishDetails" style="display:none;">
+                <label for="punishNeighbor">Which neighbor would you like to punish?</label>
+                <select id="punishNeighbor">
+                    <option value="n-1">Neighbor n-1</option>
+                    <option value="n+1">Neighbor n+1</option>
+                </select>
+
+                <label for="punishAmount">How much would you like to punish your chosen neighbor (out of $10)?</label>
+                <input type="range" id="punishAmount" name="punishAmount" min="0" max="10" value="0" step="1">
+                <p>Punishment: $<span id="punishAmountValue">0</span></p>
+            </div>
+
+            <button id="submitPunishment" class="button" onclick="submitPunishment()" style="display:none;">Next</button>
+        </div>
+
+        <!-- Payoff Calculation -->
+        <div id="payoffSection" class="question" style="display:none;">
+            <p>Your final payoff is calculated based on your contribution, the public good payoff, and any punishment.</p>
+            <div class="formula">
+                <p>Final Payoff Formula:</p>
+                <p><strong>Final Payoff = 20 - Contribution + Public Good Payoff + Leftover Punishment Budget - 2 × Punishment</strong></p>
+                <p>Your Data:</p>
+                <ul>
+                    <li><strong>Contribution:</strong> $<span id="finalContribution">0</span></li>
+                    <li><strong>Public Good Payoff:</strong> $<span id="publicGoodPayoff">0</span></li>
+                    <li><strong>Leftover Punishment Budget:</strong> $<span id="leftoverPunishment">0</span></li>
+                    <li><strong>Punishment:</strong> $<span id="finalPunishment">0</span></li>
+                    <li><strong>Final Payoff:</strong> $<span id="finalPayoff">0</span></li>
+                </ul>
+            </div>
+            <button class="button" onclick="nextRound()">Next Round</button>
+        </div>
+
+    </div>
+
+    <script>
+        let contribution = 0;
+        let punishment = 0;
+        let publicGoodPayoff = 0;
+        let leftoverPunishment = 10;
+        let participantNumber = 1; // This can be randomized or assigned dynamically
+
+        document.getElementById("contribution").addEventListener("input", function() {
+            contribution = parseInt(this.value);
+            document.getElementById("contributionValue").textContent = contribution;
+        });
+
+        document.getElementById("punishYes").addEventListener("change", function() {
+            document.getElementById("punishDetails").style.display = 'block';
+            document.getElementById("submitPunishment").style.display = 'block';
+        });
+
+        document.getElementById("punishNo").addEventListener("change", function() {
+            document.getElementById("punishDetails").style.display = 'none';
+            document.getElementById("submitPunishment").style.display = 'block';  // Show the Next button even if No is selected
+        });
+
+        document.getElementById("punishAmount").addEventListener("input", function() {
+            punishment = parseInt(this.value);
+            document.getElementById("punishAmountValue").textContent = punishment;
+        });
+
+        function submitContribution() {
+            publicGoodPayoff = 10; // Assume a simple calculation for the public good payoff
+            document.getElementById("contributionQuestion").style.display = 'none';
+            document.getElementById("punishmentSection").style.display = 'block';
+        }
+
+        function submitPunishment() {
+            // If no punishment, assign leftover punishment to 10, and final punishment is 0
+            if (document.getElementById("punishNo").checked) {
+                punishment = 0;
+                leftoverPunishment = 10;  // All punishment budget remains
+            } else {
+                leftoverPunishment = 10 - punishment;
+            }
+
+            // Calculate final payoff
+            let finalPayoff = 20 - contribution + publicGoodPayoff + leftoverPunishment - (2 * punishment);
+            
+            // Display results
+            document.getElementById("punishmentSection").style.display = 'none';
+            document.getElementById("payoffSection").style.display = 'block';
+            
+            document.getElementById("finalContribution").textContent = contribution;
+            document.getElementById("publicGoodPayoff").textContent = publicGoodPayoff;
+            document.getElementById("leftoverPunishment").textContent = leftoverPunishment;
+            document.getElementById("finalPunishment").textContent = punishment;
+            document.getElementById("finalPayoff").textContent = finalPayoff.toFixed(2);
+        }
+
+        function nextRound() {
+            // For simplicity, the example just resets to round 1. You can loop through rounds dynamically.
+            document.getElementById("payoffSection").style.display = 'none';
+            document.getElementById("roundNumber").textContent = 2;
+            document.getElementById("participantNumber").textContent = participantNumber + 1;
+            document.getElementById("contributionQuestion").style.display = 'block';
+        }
+    </script>
+    <script src="script.js"></script>
+
+
+</body>
+</html>
